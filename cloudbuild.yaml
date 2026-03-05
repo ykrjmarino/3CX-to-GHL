@@ -3,3 +3,6 @@ steps:
   args:
     - '--path'
     - 'backend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
