@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Crm Name="GoHighLevel" Version="1" Country="US" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <Number Prefix="AsIs" />
+
+  <Connection MaxConcurrentRequests="4" />
+
+  <Parameters>
+  </Parameters>
+
+  <Authentication Type="No" />
+
+  <Scenarios>
+
+```
+<Scenario Id="ReportCall">
+  <Request Url="https://diarthrodial-ibrahim-hypokinetic.ngrok-free.dev/webhooks/3cx/reportcall"
+           Method="POST"
+           ContentType="application/json">
+  </Request>
+</Scenario>
+```
+
+  </Scenarios>
+
+</Crm>
