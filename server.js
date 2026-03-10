@@ -27,18 +27,21 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
   const CUSTOM_PHONE_FIELD_ID = process.env.CUSTOM_PHONE_FIELD_ID;
   const CUSTOM_PHONE_FIELD_KEY = process.env.CUSTOM_PHONE_FIELD_KEY;
   const SYNC_TAG = process.env.SYNC_TAG || 'sync-3cx';
+  const CUSTOM_FIELD_ID = process.env.CUSTOM_FIELD_ID;
+  const CUSTOM_FIELD_KEY = process.env.CUSTOM_FIELD_KEY;
   
   const token = req.headers['x-3cx-token'];
   if (token !== '3cx-secret') return res.status(403).send('Forbidden');
 
-  console.log('Raw body:', req.body);
   const { callerNumber, callerName } = req.body;
-  console.log('3CX Call:', callerNumber, callerName);
+    console.log('Raw body:', req.body);
 
   if (!callerNumber) return res.status(400).send('callerNumber missing');
 
+  const normalizedPhone = callerNumber.replace(/[^0-9]/g, '');
+  console.log('3CX Call:', callerNumber, callerName);
+
   try {
-    const normalizedPhone = callerNumber.replace(/[^0-9]/g, '');
 
     // SEARCH CONTACT
     const search = await axios.get(
@@ -58,7 +61,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
 
     // FILTER BY PHONE in Node
     const existingContact = search.data.contacts.find(c =>
-      c.customFields?.some(f => f.id === CUSTOM_PHONE_FIELD_ID && f.field_value === normalizedPhone)
+      c.customFields?.some(f => f.id === CUSTOM_PHONE_FIELD_ID && f.value === normalizedPhone)
     );
 
     let contactId;
@@ -67,10 +70,14 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
       contactId = existingContact.id;
       console.log('Found contact in GHL:', contactId);
 
-      // Update or add tag from env
+      // Merge existing tags with SYNC_TAG
+      const currentTags = existingContact.tags || [];
+      if (!currentTags.includes(SYNC_TAG)) currentTags.push(SYNC_TAG);
+
+      // ADD TAG if needed
       await axios.put(
         `https://services.leadconnectorhq.com/contacts/${contactId}`,
-        { tags: [SYNC_TAG] },
+        { tags: currentTags },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -82,6 +89,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
       );
 
     } else {
+      // CREATE NEW CONTACT
       const create = await axios.post(
         'https://services.leadconnectorhq.com/contacts',
         {
@@ -92,7 +100,13 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
           customFields: [
             {
               id: CUSTOM_PHONE_FIELD_ID,
+              key: CUSTOM_PHONE_FIELD_KEY,
               field_value: normalizedPhone
+            },
+            {
+              id: CUSTOM_FIELD_ID,
+              key: CUSTOM_FIELD_KEY,
+              field_value: callerNumber //store 3CX contact id here if meron na
             }
           ]
         },
