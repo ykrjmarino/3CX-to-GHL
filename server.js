@@ -11,8 +11,7 @@ app.use(express.json());
 
 
 
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
-const LOCATION_ID = process.env.LOCATION_ID;
+
 
 /*app.post('/webhooks/3cx/reportcall', async (req, res) => {
 
@@ -23,6 +22,12 @@ const LOCATION_ID = process.env.LOCATION_ID;
 });
 */
 app.post('/webhooks/3cx/reportcall', async (req, res) => {
+  const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
+  const LOCATION_ID = process.env.LOCATION_ID;
+  const CUSTOM_PHONE_FIELD_ID = process.env.CUSTOM_PHONE_FIELD_ID;
+  const CUSTOM_PHONE_FIELD_KEY = process.env.CUSTOM_PHONE_FIELD_KEY;
+  const SYNC_TAG = process.env.SYNC_TAG || 'sync-3cx';
+  
   const token = req.headers['x-3cx-token'];
   if (token !== '3cx-secret') return res.status(403).send('Forbidden');
 
@@ -33,7 +38,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
   if (!callerNumber) return res.status(400).send('callerNumber missing');
 
   try {
-    const normalizedPhone = callerNumber.replace(/[^0-9]/g,'');
+    const normalizedPhone = callerNumber.replace(/[^0-9]/g, '');
 
     // SEARCH CONTACT
     const search = await axios.get(
@@ -52,16 +57,30 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
     );
 
     // FILTER BY PHONE in Node
-    const existingContact = search.data.contacts.find(
-      c => c.phone === normalizedPhone
+    const existingContact = search.data.contacts.find(c =>
+      c.customFields?.some(f => f.id === CUSTOM_PHONE_FIELD_ID && f.field_value === normalizedPhone)
     );
 
     let contactId;
-    const CUSTOM_PHONE_FIELD_ID = process.env.CUSTOM_PHONE_FIELD_ID;
 
     if (existingContact) {
       contactId = existingContact.id;
       console.log('Found contact in GHL:', contactId);
+
+      // Update or add tag from env
+      await axios.put(
+        `https://services.leadconnectorhq.com/contacts/${contactId}`,
+        { tags: [SYNC_TAG] },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Version: '2021-07-28',
+            Authorization: `Bearer ${ACCESS_TOKEN}`
+          }
+        }
+      );
+
     } else {
       const create = await axios.post(
         'https://services.leadconnectorhq.com/contacts',
@@ -69,6 +88,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
           firstName: callerName || 'Unknown',
           name: callerName || 'Unknown',
           locationId: LOCATION_ID,
+          tags: [SYNC_TAG],
           customFields: [
             {
               id: CUSTOM_PHONE_FIELD_ID,
@@ -86,7 +106,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
         }
       );
       contactId = create.data.contact.id;
-      console.log('Created new contact in GHL with phone custom field:', contactId);
+      console.log('Created new contact in GHL with phone custom field and tag:', contactId);
     }
 
     res.status(200).send({ status: 'OK', contactId });
