@@ -13,14 +13,13 @@ app.use(express.json());
 
 
 
-/*app.post('/webhooks/3cx/reportcall', async (req, res) => {
-
-  console.log('Headers:', req.headers);
-  console.log('Raw body:', req.body);
-
+app.post('/webhooks/3cx/reportcall', (req, res) => {
+  const { caller, callee, callid, direction, duration } = req.query;
+  console.log('3CX Call Info:', { caller, callee, callid, direction, duration });
   res.send('received');
 });
-*/
+
+/*
 app.post('/webhooks/3cx/reportcall', async (req, res) => {
   const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
   const LOCATION_ID = process.env.LOCATION_ID;
@@ -88,6 +87,8 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
         }
       );
 
+      console.log('Updated contact and added sync tag in GHL');
+
     } else {
       // CREATE NEW CONTACT
       const create = await axios.post(
@@ -130,6 +131,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
   }
 });
 
+*/
 
 
 
@@ -138,8 +140,7 @@ app.post('/webhooks/3cx/reportcall', async (req, res) => {
 
 
 
-
-app.get("/", (req, res) => res.send("Backend is running 3cx"));
+app.get("/", (req, res) => res.send("Backend is running 3cx testing webhook"));
 
 app.listen(port, () => {
   // db.connect();

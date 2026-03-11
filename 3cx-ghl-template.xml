@@ -1,27 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<Crm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+     Country="US" 
+     Name="GoHighLevel" 
+     Version="1" 
+     SupportsEmojis="false" 
+     SupportsTranscription="true" 
+     ListPageSize="0">
 
-<Crm Name="GoHighLevel" Version="1" Country="US" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
-  <Number Prefix="AsIs" />
-
+  <Number Prefix="AsIs" MaxLength="" />
   <Connection MaxConcurrentRequests="4" />
-
-  <Parameters>
-  </Parameters>
-
+  <Parameters />
   <Authentication Type="No" />
 
   <Scenarios>
-
-```
-<Scenario Id="ReportCall">
-  <Request Url="https://diarthrodial-ibrahim-hypokinetic.ngrok-free.dev/webhooks/3cx/reportcall"
-           Method="POST"
-           ContentType="application/json">
-  </Request>
-</Scenario>
-```
-
+    <Scenario Id="ReportCall" Type="REST" EntityId="" EntityOrder="">
+      <Request 
+        SkipIf="" 
+        Url="https://diarthrodial-ibrahim-hypokinetic.ngrok-free.dev/webhooks/3cx/reportcall?caller={{CallerID}}&amp;callee={{CalledNumber}}&amp;callid={{CallID}}&amp;direction={{Direction}}&amp;duration={{Duration}}" 
+        MessagePasses="0" 
+        Message="" 
+        RequestContentType="application/json" 
+        RequestEncoding="UrlEncoded" 
+        RequestType="Post" 
+        ResponseType="Json" />
+      <Variables />
+      <Outputs AllowEmpty="false" />
+    </Scenario>
   </Scenarios>
-
 </Crm>
