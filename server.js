@@ -14,8 +14,8 @@ app.use(express.json());
 
 
 app.post('/webhooks/3cx/reportcall', (req, res) => {
-  const { caller, callee, callid, direction, duration } = req.query;
-  console.log('3CX Call Info:', { caller, callee, callid, direction, duration });
+  const { caller, displayName } = req.query;
+  console.log('3CX Call Info:', { caller, displayName });
   res.send('received');
 });
 
